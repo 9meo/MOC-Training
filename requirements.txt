@@ -1,0 +1,11 @@
+llama-index
+llama-index-vector-stores-faiss
+llama-index-embeddings-huggingface
+transformers
+torch
+faiss-cpu
+jupyter
+tqdm
+llama-index-llms-ollama
+fastapi
+uvicorn

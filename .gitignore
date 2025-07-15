@@ -1,0 +1,47 @@
+# ----- Python Bytecode -----
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+
+# ----- Virtual Environments -----
+.env/
+venv/
+env/
+ENV/
+
+# ----- Jupyter Notebooks -----
+.ipynb_checkpoints/
+*.ipynb~
+
+# ----- Logs -----
+*.log
+
+# ----- Build / Dist -----
+build/
+dist/
+*.egg-info/
+
+# ----- IDE / Editor -----
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ----- macOS / Windows System Files -----
+.DS_Store
+Thumbs.db
+
+# ----- Project‑specific -----
+#   – ฝั่ง LlamaIndex / FAISS storage
+storage/
+*.faiss
+
+#   – ไฟล์ข้อมูลตัวอย่าง (สามารถยกเว้น README.md ได้)
+data/
+!data/README.md
+
+# ----- Environment Variables -----
+*.env
+.env.*
