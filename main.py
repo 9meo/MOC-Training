@@ -8,27 +8,29 @@ from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.core.retrievers import VectorIndexRetriever
 from llama_index.core.query_engine import RetrieverQueryEngine
 from llama_index.core.prompts.default_prompts import DEFAULT_SIMPLE_INPUT_PROMPT
-from llama_index.llms.ollama import Ollama
+from llama_index.core import Settings
 # ---------- CONFIG ----------
 EMBED_DIM = 1024                   # BAAI/bge‑m3
 FAISS_INDEX_PATH = "./storage/"
 API_KEY = "supersecretapikey"      # ตั้งเป็น env ในโปรดักชัน
 # -----------------------------
-llm = Ollama(model="gemma3n:e2b", request_timeout=60.0)
+
 app = FastAPI()
+
+
 
 # --- Load index once at startup ---
 embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-m3")
 
+Settings.llm=None
+Settings.embed_model = embed_model
+Settings.persist_dir = FAISS_INDEX_PATH
+
 faiss_store = FaissVectorStore.from_persist_dir(FAISS_INDEX_PATH)
 
-storage_ctx = StorageContext.from_defaults(vector_store=faiss_store)
+storage_ctx = StorageContext.from_defaults(vector_store=faiss_store, persist_dir=FAISS_INDEX_PATH)
 index = load_index_from_storage(storage_context=storage_ctx)
-retriever = VectorIndexRetriever(index=index, similarity_top_k=3)
-engine = RetrieverQueryEngine(
-    retriever=retriever,
-    input_prompt=DEFAULT_SIMPLE_INPUT_PROMPT
-)
+engine = index.as_query_engine(similarity_top_k=3)
 
 # ---------- Schemas ---------- #
 class RetrievalSetting(BaseModel):
@@ -64,8 +66,9 @@ async def retrieval(request: Request, body: DifyRetrievalRequest):
     verify_api_key(request)
 
     # ตั้งค่า top_k และ threshold จากรีเควสต์
-    retriever.similarity_top_k = body.retrieval_setting.top_k
-    response = engine.query(body.query)
+    query_engine = index.as_query_engine(similarity_top_k=body.retrieval_setting.top_k)
+    response = query_engine.query(body.query)
+    
 
     records = []
     for node in response.source_nodes:
