@@ -10,16 +10,18 @@ from llama_index.core import SimpleDirectoryReader, VectorStoreIndex, StorageCon
 from llama_index.core.node_parser import TokenTextSplitter
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.vector_stores.faiss import FaissVectorStore
-
+from llama_index.core import Settings
 # Config
 DATA_DIR = "data"
 OUTPUT_DIR = "storage"
-FAISS_PATH = f"{OUTPUT_DIR}/faiss_index.faiss"
+
 
 def main():
     # Setup
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     embed_model = HuggingFaceEmbedding("BAAI/bge-m3", normalize=True)
+    Settings.embed_model = embed_model
+    Settings.persist_dir = OUTPUT_DIR
     
     # Load & chunk documents
     print("Loading documents...")
@@ -33,7 +35,7 @@ def main():
     vector_store = FaissVectorStore(faiss_index=faiss_index)
     storage_context = StorageContext.from_defaults(vector_store=vector_store)
     
-    index = VectorStoreIndex(nodes, embed_model=embed_model, storage_context=storage_context)
+    index = VectorStoreIndex(nodes,   show_progress=True)
     
     # Save
     print("Saving...")
