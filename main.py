@@ -3,15 +3,17 @@ from pydantic import BaseModel
 import uvicorn
 
 from llama_index.core import load_index_from_storage, StorageContext
-from llama_index.vector_stores.faiss import FaissVectorStore
+from llama_index.vector_stores.chroma import ChromaVectorStore
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.core.retrievers import VectorIndexRetriever
 from llama_index.core.query_engine import RetrieverQueryEngine
 from llama_index.core.prompts.default_prompts import DEFAULT_SIMPLE_INPUT_PROMPT
 from llama_index.core import Settings
+import chromadb
 # ---------- CONFIG ----------
 EMBED_DIM = 1024                   # BAAI/bge‑m3
-FAISS_INDEX_PATH = "./storage/"
+CHROMA_INDEX_PATH = "./chroma_db/"
+persit_dir = "./storage/"
 API_KEY = "supersecretapikey"      # ตั้งเป็น env ในโปรดักชัน
 # -----------------------------
 
@@ -24,13 +26,17 @@ embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-m3")
 
 Settings.llm=None
 Settings.embed_model = embed_model
-Settings.persist_dir = FAISS_INDEX_PATH
+Settings.persist_dir = CHROMA_INDEX_PATH
 
-faiss_store = FaissVectorStore.from_persist_dir(FAISS_INDEX_PATH)
+chroma_client = chromadb.PersistentClient(path=CHROMA_INDEX_PATH)
+chroma_collection = chroma_client.get_or_create_collection("rag_demo")
 
-storage_ctx = StorageContext.from_defaults(vector_store=faiss_store, persist_dir=FAISS_INDEX_PATH)
+# Create vector store
+chroma_store = ChromaVectorStore(chroma_collection=chroma_collection)
+
+storage_ctx = StorageContext.from_defaults(vector_store=chroma_store, persist_dir=persit_dir)
 index = load_index_from_storage(storage_context=storage_ctx)
-engine = index.as_query_engine(similarity_top_k=3)
+engine = index.as_query_engine(similarity_top_k=5)
 
 # ---------- Schemas ---------- #
 class RetrievalSetting(BaseModel):

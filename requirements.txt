@@ -1,6 +1,8 @@
-llama-index==0.10.37
+llama-index
 llama-index-embeddings-huggingface
 llama-index-llms-huggingface
+llama-index-vector-stores-faiss
+llama-index-vector-stores-chroma
 transformers
 torch
 sentence-transformers
