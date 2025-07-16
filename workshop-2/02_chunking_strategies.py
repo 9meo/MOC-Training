@@ -9,7 +9,7 @@ from llama_index.core.node_parser import (
     TokenTextSplitter,
     SentenceSplitter,
     SemanticSplitterNodeParser,
-    RecursiveCharacterTextSplitter
+    SimpleNodeParser
 )
 from llama_index.core import Document
 from llama_index.core import Settings
@@ -18,17 +18,91 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
 import numpy as np
+import torch
 from typing import List, Dict
+import re
 
 def setup_models():
     """ตั้งค่าโมเดลที่จำเป็น"""
+    # Check if CUDA is available
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    
     embed_model = HuggingFaceEmbedding(
         model_name="BAAI/bge-m3",
         max_length=8192,
-        normalize=True
+        normalize=True,
+        device=device
     )
     Settings.embed_model = embed_model
+    print(f"Embedding model loaded on: {device}")
     return embed_model
+
+class CustomRecursiveTextSplitter:
+    """
+    Custom implementation of recursive text splitter for LlamaIndex
+    """
+    def __init__(self, chunk_size: int, chunk_overlap: int, separators: List[str] = None):
+        self.chunk_size = chunk_size
+        self.chunk_overlap = chunk_overlap
+        self.separators = separators or ["\n\n", "\n", " ", ""]
+    
+    def get_nodes_from_documents(self, documents: List[Document]) -> List:
+        """Split documents into nodes using recursive approach"""
+        nodes = []
+        for doc in documents:
+            text_chunks = self._split_text_recursive(doc.text, self.separators)
+            for chunk in text_chunks:
+                if chunk.strip():
+                    nodes.append(type('Node', (), {'text': chunk.strip()})())
+        return nodes
+    
+    def _split_text_recursive(self, text: str, separators: List[str]) -> List[str]:
+        """Recursively split text using different separators"""
+        if not separators:
+            return [text]
+        
+        separator = separators[0]
+        remaining_separators = separators[1:]
+        
+        if separator == "":
+            # Character-level splitting
+            return self._split_by_characters(text)
+        
+        chunks = []
+        parts = text.split(separator)
+        
+        current_chunk = ""
+        for part in parts:
+            if len(current_chunk) + len(part) + len(separator) <= self.chunk_size:
+                if current_chunk:
+                    current_chunk += separator + part
+                else:
+                    current_chunk = part
+            else:
+                if current_chunk:
+                    chunks.append(current_chunk)
+                
+                if len(part) > self.chunk_size:
+                    # Part is too long, split it further
+                    sub_chunks = self._split_text_recursive(part, remaining_separators)
+                    chunks.extend(sub_chunks)
+                    current_chunk = ""
+                else:
+                    current_chunk = part
+        
+        if current_chunk:
+            chunks.append(current_chunk)
+        
+        return chunks
+    
+    def _split_by_characters(self, text: str) -> List[str]:
+        """Split text by characters when all other separators fail"""
+        chunks = []
+        for i in range(0, len(text), self.chunk_size - self.chunk_overlap):
+            chunk = text[i:i + self.chunk_size]
+            if chunk.strip():
+                chunks.append(chunk)
+        return chunks
 
 def create_sample_document():
     """สร้างเอกสารตัวอย่างภาษาไทยสำหรับการทดสอบ"""
@@ -82,30 +156,40 @@ def compare_chunking_strategies(document: Document, chunk_sizes: List[int]):
         )
         sentence_nodes = sentence_splitter.get_nodes_from_documents([document])
         
-        # 3. Recursive character splitter
-        recursive_splitter = RecursiveCharacterTextSplitter(
+        # 3. Custom recursive character splitter
+        recursive_splitter = CustomRecursiveTextSplitter(
             chunk_size=chunk_size,
             chunk_overlap=int(chunk_size * 0.1),
             separators=["\n\n", "\n", " ", ""]
         )
         recursive_nodes = recursive_splitter.get_nodes_from_documents([document])
         
+        # 4. Simple node parser (basic splitting)
+        simple_parser = SimpleNodeParser(
+            chunk_size=chunk_size,
+            chunk_overlap=int(chunk_size * 0.1)
+        )
+        simple_nodes = simple_parser.get_nodes_from_documents([document])
+        
         # Collect results
         strategies = [
             ("Token", token_nodes),
             ("Sentence", sentence_nodes),
-            ("Recursive", recursive_nodes)
+            ("Recursive", recursive_nodes),
+            ("Simple", simple_nodes)
         ]
         
         for strategy_name, nodes in strategies:
             if nodes:  # ตรวจสอบว่ามี nodes หรือไม่
+                chunk_lengths = [len(node.text) for node in nodes]
                 results.append({
                     'chunk_size': chunk_size,
                     'strategy': strategy_name,
                     'num_chunks': len(nodes),
-                    'avg_chunk_length': np.mean([len(node.text) for node in nodes]),
-                    'min_chunk_length': min([len(node.text) for node in nodes]),
-                    'max_chunk_length': max([len(node.text) for node in nodes])
+                    'avg_chunk_length': np.mean(chunk_lengths),
+                    'min_chunk_length': min(chunk_lengths),
+                    'max_chunk_length': max(chunk_lengths),
+                    'std_chunk_length': np.std(chunk_lengths)
                 })
     
     return pd.DataFrame(results)
@@ -137,7 +221,10 @@ def test_semantic_chunking(document: Document, embed_model):
         print(f"Semantic Chunking Results:")
         print(f"Number of semantic chunks: {len(semantic_nodes)}")
         if semantic_nodes:
-            print(f"Average chunk length: {np.mean([len(node.text) for node in semantic_nodes]):.2f}")
+            chunk_lengths = [len(node.text) for node in semantic_nodes]
+            print(f"Average chunk length: {np.mean(chunk_lengths):.2f}")
+            print(f"Min chunk length: {min(chunk_lengths)}")
+            print(f"Max chunk length: {max(chunk_lengths)}")
             
             # Show semantic chunks
             for i, node in enumerate(semantic_nodes[:3]):  # แสดงแค่ 3 chunks แรก
@@ -174,23 +261,27 @@ def analyze_chunk_quality(nodes: List, chunk_name: str):
     print(f"Standard deviation: {np.std(lengths):.2f}")
     print(f"Min length: {min(lengths)}")
     print(f"Max length: {max(lengths)}")
-    print(f"Length consistency (std/mean): {np.std(lengths)/np.mean(lengths):.3f}")
+    
+    if np.mean(lengths) > 0:
+        print(f"Length consistency (std/mean): {np.std(lengths)/np.mean(lengths):.3f}")
     
     # Check for coherence (basic metric)
     coherence_scores = []
     for node in nodes:
         sentences = node.text.split('. ')
-        coherence_score = len(sentences) / len(node.text)  # sentences per character
-        coherence_scores.append(coherence_score)
+        if len(node.text) > 0:
+            coherence_score = len(sentences) / len(node.text)  # sentences per character
+            coherence_scores.append(coherence_score)
     
-    print(f"Average coherence score: {np.mean(coherence_scores):.6f}")
+    if coherence_scores:
+        print(f"Average coherence score: {np.mean(coherence_scores):.6f}")
     
     return {
         'num_chunks': len(nodes),
         'avg_length': np.mean(lengths),
         'std_length': np.std(lengths),
-        'consistency': np.std(lengths)/np.mean(lengths),
-        'coherence': np.mean(coherence_scores)
+        'consistency': np.std(lengths)/np.mean(lengths) if np.mean(lengths) > 0 else 0,
+        'coherence': np.mean(coherence_scores) if coherence_scores else 0
     }
 
 def visualize_chunking_results(results_df: pd.DataFrame):
@@ -204,39 +295,45 @@ def visualize_chunking_results(results_df: pd.DataFrame):
         print("No results to visualize")
         return
     
-    fig, axes = plt.subplots(2, 2, figsize=(15, 10))
-    fig.suptitle('Chunking Strategy Analysis', fontsize=16)
+    # Set up the plotting style
+    plt.style.use('default')
+    sns.set_palette("husl")
+    
+    fig, axes = plt.subplots(2, 2, figsize=(16, 12))
+    fig.suptitle('Chunking Strategy Analysis', fontsize=16, fontweight='bold')
 
     # Number of chunks vs chunk size
-    sns.lineplot(data=results_df, x='chunk_size', y='num_chunks', hue='strategy', ax=axes[0,0])
-    axes[0,0].set_title('Number of Chunks vs Chunk Size')
-    axes[0,0].set_xlabel('Chunk Size')
-    axes[0,0].set_ylabel('Number of Chunks')
+    sns.lineplot(data=results_df, x='chunk_size', y='num_chunks', hue='strategy', 
+                marker='o', linewidth=2, markersize=8, ax=axes[0,0])
+    axes[0,0].set_title('Number of Chunks vs Chunk Size', fontsize=14)
+    axes[0,0].set_xlabel('Chunk Size', fontsize=12)
+    axes[0,0].set_ylabel('Number of Chunks', fontsize=12)
+    axes[0,0].grid(True, alpha=0.3)
 
     # Average chunk length vs chunk size
-    sns.lineplot(data=results_df, x='chunk_size', y='avg_chunk_length', hue='strategy', ax=axes[0,1])
-    axes[0,1].set_title('Average Chunk Length vs Chunk Size')
-    axes[0,1].set_xlabel('Chunk Size')
-    axes[0,1].set_ylabel('Average Chunk Length')
+    sns.lineplot(data=results_df, x='chunk_size', y='avg_chunk_length', hue='strategy', 
+                marker='s', linewidth=2, markersize=8, ax=axes[0,1])
+    axes[0,1].set_title('Average Chunk Length vs Chunk Size', fontsize=14)
+    axes[0,1].set_xlabel('Chunk Size', fontsize=12)
+    axes[0,1].set_ylabel('Average Chunk Length', fontsize=12)
+    axes[0,1].grid(True, alpha=0.3)
 
-    # Chunk length distribution
-    strategy_colors = {'Token': 'blue', 'Sentence': 'green', 'Recursive': 'red'}
-    for strategy in results_df['strategy'].unique():
-        strategy_data = results_df[results_df['strategy'] == strategy]
-        axes[1,0].bar(strategy_data['chunk_size'], strategy_data['max_chunk_length'], 
-                     alpha=0.7, label=f'{strategy} (Max)', color=strategy_colors.get(strategy, 'gray'))
-
-    axes[1,0].set_title('Max Chunk Length by Strategy')
-    axes[1,0].set_xlabel('Chunk Size')
-    axes[1,0].set_ylabel('Chunk Length')
-    axes[1,0].legend()
+    # Chunk length standard deviation
+    sns.lineplot(data=results_df, x='chunk_size', y='std_chunk_length', hue='strategy', 
+                marker='^', linewidth=2, markersize=8, ax=axes[1,0])
+    axes[1,0].set_title('Chunk Length Standard Deviation', fontsize=14)
+    axes[1,0].set_xlabel('Chunk Size', fontsize=12)
+    axes[1,0].set_ylabel('Standard Deviation', fontsize=12)
+    axes[1,0].grid(True, alpha=0.3)
 
     # Efficiency (avg chars per chunk vs num chunks)
     results_df['efficiency'] = results_df['avg_chunk_length'] / results_df['num_chunks']
-    sns.barplot(data=results_df, x='chunk_size', y='efficiency', hue='strategy', ax=axes[1,1])
-    axes[1,1].set_title('Efficiency (Avg Chars per Num Chunks)')
-    axes[1,1].set_xlabel('Chunk Size')
-    axes[1,1].set_ylabel('Efficiency')
+    sns.lineplot(data=results_df, x='chunk_size', y='efficiency', hue='strategy', 
+                marker='d', linewidth=2, markersize=8, ax=axes[1,1])
+    axes[1,1].set_title('Efficiency (Avg Length / Num Chunks)', fontsize=14)
+    axes[1,1].set_xlabel('Chunk Size', fontsize=12)
+    axes[1,1].set_ylabel('Efficiency', fontsize=12)
+    axes[1,1].grid(True, alpha=0.3)
 
     plt.tight_layout()
     plt.show()
@@ -265,7 +362,11 @@ def main():
     
     # Visualize results
     print("\nGenerating visualizations...")
-    visualize_chunking_results(results_df)
+    try:
+        visualize_chunking_results(results_df)
+    except Exception as e:
+        print(f"Error generating visualizations: {e}")
+        print("Continuing without visualizations...")
     
     # Test semantic chunking
     semantic_nodes = test_semantic_chunking(document, embed_model)
@@ -306,6 +407,7 @@ def main():
     print("• ภาษาไทย: ใช้ขนาด 300-800 tokens เนื่องจากความซับซ้อนของภาษา")
     print("• เอกสารเทคนิค: ใช้ semantic chunking")
     print("• เนื้อหาทั่วไป: ใช้ sentence-based chunking")
+    print("• การทดสอบ: ทดสอบขนาด chunk ต่างๆ เพื่อหาค่าที่เหมาะสม")
 
 if __name__ == "__main__":
     main()

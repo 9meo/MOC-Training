@@ -1,0 +1,69 @@
+{
+  "indexes": {
+    "simple_vector": {
+      "type": "VectorStoreIndex",
+      "storage": "memory",
+      "embedding_model": "BAAI/bge-m3"
+    },
+    "chroma_vector": {
+      "type": "ChromaVectorStore",
+      "storage": "chromadb",
+      "embedding_model": "BAAI/bge-m3"
+    },
+    "faiss_vector": {
+      "type": "FaissVectorStore",
+      "storage": "faiss",
+      "embedding_model": "BAAI/bge-m3"
+    }
+  },
+  "statistics": {
+    "simple": {
+      "total_nodes": 5,
+      "total_chars": 1995,
+      "avg_chars": 399.0,
+      "min_size": 365,
+      "max_size": 429,
+      "median_size": 397.0
+    },
+    "advanced": {
+      "total_nodes": 5,
+      "total_chars": 1995,
+      "avg_chars": 399.0,
+      "min_size": 365,
+      "max_size": 429,
+      "median_size": 397.0
+    }
+  },
+  "performance": [
+    {
+      "index_type": "Simple Vector",
+      "query_time": -1,
+      "response_length": 0,
+      "response_preview": "Error: `llama-index-llms-openai` package not found, please run `pip install llama-index-llms-openai`"
+    },
+    {
+      "index_type": "Advanced Vector",
+      "query_time": -1,
+      "response_length": 0,
+      "response_preview": "Error: `llama-index-llms-openai` package not found, please run `pip install llama-index-llms-openai`"
+    },
+    {
+      "index_type": "Summary Index",
+      "query_time": -1,
+      "response_length": 0,
+      "response_preview": "Error: `llama-index-llms-openai` package not found, please run `pip install llama-index-llms-openai`"
+    },
+    {
+      "index_type": "ChromaDB",
+      "query_time": -1,
+      "response_length": 0,
+      "response_preview": "Error: `llama-index-llms-openai` package not found, please run `pip install llama-index-llms-openai`"
+    },
+    {
+      "index_type": "FAISS",
+      "query_time": -1,
+      "response_length": 0,
+      "response_preview": "Error: `llama-index-llms-openai` package not found, please run `pip install llama-index-llms-openai`"
+    }
+  ]
+}

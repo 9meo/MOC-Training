@@ -24,19 +24,22 @@ def setup_embedding_model(model_name: str = "BAAI/bge-m3"):
     Returns:
         HuggingFaceEmbedding: โมเดล embedding ที่พร้อมใช้งาน
     """
+    # Check if CUDA is available
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    
     # Initialize BGE-M3 embedding model
     embed_model = HuggingFaceEmbedding(
         model_name=model_name,
         max_length=8192,  # BGE-M3 รองรับ context length สูงสุด 8192
         normalize=True,   # normalize embeddings สำหรับ cosine similarity
-        device="cuda" if torch.cuda.is_available() else "cpu"
+        device=device
     )
     
     # Set as global embedding model
     Settings.embed_model = embed_model
     
     print(f"Embedding model loaded: {embed_model.model_name}")
-    print(f"Device: {embed_model.device}")
+    print(f"Device: {device}")
     print(f"Max length: {embed_model.max_length}")
     
     return embed_model
@@ -93,11 +96,14 @@ def save_embedding_config(embed_model, filepath: str = "embedding_config.json"):
     """
     import json
     
+    # Get device info
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    
     embedding_config = {
         "model_name": embed_model.model_name,
         "max_length": embed_model.max_length,
         "normalize": True,
-        "device": str(embed_model.device)
+        "device": device
     }
     
     with open(filepath, 'w', encoding='utf-8') as f:
@@ -109,10 +115,38 @@ def save_embedding_config(embed_model, filepath: str = "embedding_config.json"):
     
     print(f"Configuration saved to {filepath}")
 
+def get_device_info():
+    """
+    แสดงข้อมูลเกี่ยวกับ device ที่ใช้งาน
+    
+    Returns:
+        dict: ข้อมูล device
+    """
+    device_info = {
+        "torch_version": torch.__version__,
+        "cuda_available": torch.cuda.is_available(),
+        "device_count": torch.cuda.device_count() if torch.cuda.is_available() else 0,
+        "current_device": torch.cuda.current_device() if torch.cuda.is_available() else "cpu"
+    }
+    
+    if torch.cuda.is_available():
+        device_info["device_name"] = torch.cuda.get_device_name(0)
+        device_info["memory_allocated"] = torch.cuda.memory_allocated(0)
+        device_info["memory_reserved"] = torch.cuda.memory_reserved(0)
+    
+    return device_info
+
 if __name__ == "__main__":
     print("=" * 50)
     print("EMBEDDING MODEL SETUP")
     print("=" * 50)
+    
+    # Show device information
+    device_info = get_device_info()
+    print("Device Information:")
+    for key, value in device_info.items():
+        print(f"{key}: {value}")
+    print("-" * 50)
     
     # Setup embedding model
     embed_model = setup_embedding_model()

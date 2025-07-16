@@ -1,0 +1,80 @@
+[
+  {
+    "text": "การเรียนรู้ของเครื่อง (Machine Learning) เป็นสาขาหนึ่งของปัญญาประดิษฐ์ที่มุ่งเน้นการพัฒนาอัลกอริทึมที่สามารถเรียนรู้จากข้อมูล \n            โดยไม่ต้องเขียนโปรแกรมอย่างชัดเจน มีหลายประเภท เช่น Supervised Learning ที่ใช้ข้อมูลที่มีป้ายกำกับ \n            Unsupervised Learning ที่ค้นหาแพทเทิร์นในข้อมูลที่ไม่มีป้ายกำกับ และ Reinforcement Learning ที่เรียนรู้จากการทดลองและความคิดเห็น",
+    "metadata": {
+      "source": "ML_basics.pdf",
+      "page": 1,
+      "node_id": "node_0",
+      "thai_keywords": [
+        "ปัญญาประดิษฐ์",
+        "Machine Learning",
+        "การเรียนรู้ของเครื่อง",
+        "อัลกอริทึม",
+        "ข้อมูล"
+      ],
+      "content_type": "technical",
+      "language": "thai",
+      "char_count": 379,
+      "word_count": 17,
+      "estimated_reading_time": 1,
+      "processing_timestamp": "2025-07-16T22:03:02.810775",
+      "tech_density": 0.23529411764705882,
+      "complexity_score": 0.85,
+      "topic": "machine_learning",
+      "sentence_count": 1,
+      "avg_sentence_length": 17.0
+    },
+    "id": "6c314ccf-24df-4ffd-837c-ab43cfc08147"
+  },
+  {
+    "text": "Neural Networks เป็นโมเดลที่ได้รับแรงบันดาลใจจากระบบประสาทของสมองมนุษย์ ประกอบด้วยชั้นของ neurons ที่เชื่อมต่อกัน \n            การเรียนรู้เชิงลึก (Deep Learning) ใช้ neural networks ที่มีหลายชั้น เรียกว่า Deep Neural Networks \n            ซึ่งมีประสิทธิภาพสูงในการแก้ปัญหาซับซ้อน เช่น การรู้จำภาพ การประมวลผลภาษาธรรมชาติ และการสร้าง content",
+    "metadata": {
+      "source": "neural_networks.pdf",
+      "page": 1,
+      "node_id": "node_1",
+      "thai_keywords": [
+        "Deep Learning",
+        "Neural Networks",
+        "การเรียนรู้เชิงลึก",
+        "ประมวลผลภาษาธรรมชาติ",
+        "โมเดล"
+      ],
+      "content_type": "technical",
+      "language": "thai",
+      "char_count": 340,
+      "word_count": 23,
+      "estimated_reading_time": 1,
+      "processing_timestamp": "2025-07-16T22:03:02.810805",
+      "tech_density": 0.08695652173913043,
+      "complexity_score": 1.0,
+      "topic": "neural_networks",
+      "sentence_count": 1,
+      "avg_sentence_length": 23.0
+    },
+    "id": "180f2cbb-e7e9-43e6-8f33-bf0d6be533a6"
+  },
+  {
+    "text": "Natural Language Processing (NLP) เป็นสาขาที่รวมศาสตร์คอมพิวเตอร์ ปัญญาประดิษฐ์ และภาษาศาสตร์ \n            เพื่อช่วยให้คอมพิวเตอร์เข้าใจและประมวลผลภาษาของมนุษย์ งานสำคัญใน NLP ได้แก่ การแปลภาษา การสรุปข้อความ \n            การวิเคราะห์ความรู้สึก การตอบคำถาม และการสร้างข้อความ เทคโนโลยี NLP ถูกนำไปใช้ใน chatbots, search engines และ voice assistants",
+    "metadata": {
+      "source": "nlp_overview.pdf",
+      "page": 1,
+      "node_id": "node_2",
+      "thai_keywords": [
+        "ปัญญาประดิษฐ์",
+        "NLP"
+      ],
+      "content_type": "technical",
+      "language": "thai",
+      "char_count": 348,
+      "word_count": 25,
+      "estimated_reading_time": 1,
+      "processing_timestamp": "2025-07-16T22:03:02.810812",
+      "tech_density": 0.04,
+      "complexity_score": 1.0,
+      "topic": "nlp",
+      "sentence_count": 1,
+      "avg_sentence_length": 25.0
+    },
+    "id": "455f7fa4-0a5e-4884-9fd1-b5697f6ec029"
+  }
+]
