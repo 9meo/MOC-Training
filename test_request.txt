@@ -1,0 +1,8 @@
+curl -X POST http://localhost:8080/retrieval   -H "Content-Type: application/json"   -H "Authorization: Bearer supersecretapikey"   -d '{
+        "knowledge_id": "demo-knowledge",
+        "query": "AI สำคัญกับประเทศไทยอย่างไร",
+        "retrieval_setting": {
+            "top_k": 3,
+            "score_threshold": 0.1
+        }
+      }'
