@@ -39,7 +39,6 @@ storage/
 *.faiss
 
 #   – ไฟล์ข้อมูลตัวอย่าง (สามารถยกเว้น README.md ได้)
-data/
 !data/README.md
 
 # ----- Environment Variables -----
