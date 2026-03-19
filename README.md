@@ -1,6 +1,9 @@
-````markdown
 
 Chunking [[Colab](https://colab.research.google.com/github/9meo/MOC-Training/blob/main/02_chunking.ipynb)]
+
+
+````markdown
+
 
 # LlamaIndex RAG Workshop (with FAISS, BGE-M3, Thai Documents)
 
