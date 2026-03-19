@@ -1,4 +1,7 @@
 ````markdown
+
+Chunking [[Colab](https://colab.research.google.com/github/9meo/MOC-Training/blob/main/02_chunking.ipynb)]
+
 # LlamaIndex RAG Workshop (with FAISS, BGE-M3, Thai Documents)
 
 ### Workshop สำหรับเรียนรู้ RAG, LlamaIndex, FAISS และ Embedding ภาษาไทย
