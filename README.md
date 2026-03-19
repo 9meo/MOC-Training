@@ -1,6 +1,7 @@
 
 Chunking [[Colab](https://colab.research.google.com/github/9meo/MOC-Training/blob/main/02_chunking.ipynb)]
 
+indexing_and_searching [[Colab](https://colab.research.google.com/github/9meo/MOC-Training/blob/main/03_indexing_and_searching.ipynb)]
 
 ````markdown
 
