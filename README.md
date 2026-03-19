@@ -3,6 +3,8 @@ Chunking [[Colab](https://colab.research.google.com/github/9meo/MOC-Training/blo
 
 indexing_and_searching [[Colab](https://colab.research.google.com/github/9meo/MOC-Training/blob/main/03_indexing_and_searching.ipynb)]
 
+rag_demo_openrouter [[Colab](https://colab.research.google.com/github/9meo/MOC-Training/blob/main/04_rag_demo_openrouter.ipynb)]
+
 ````markdown
 
 
